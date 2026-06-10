@@ -1,0 +1,73 @@
+name: Nix Docker
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: nix-docker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v19
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-conf: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v13
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: nix build .#dockerImage --print-build-logs --out-link result
+
+      - name: Load Docker image
+        run: docker load < result
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GHCR
+        env:
+          REGISTRY: ghcr.io/${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          VERSION=$(tr -d '\n' < internal/config/version)
+          LOCAL="3x-ui-nix-local:nix-${VERSION}"
+
+          push_tag() {
+            docker tag "$LOCAL" "$1"
+            docker push "$1"
+          }
+
+          push_tag "${REGISTRY}:${VERSION}"
+          push_tag "${REGISTRY}:sha-${GITHUB_SHA::7}"
+
+          if [ "${{ github.ref }}" = "refs/heads/nix-docker" ]; then
+            push_tag "${REGISTRY}:latest"
+          fi
+
+          case "${{ github.ref }}" in
+            refs/tags/*)
+              GIT_TAG="${GITHUB_REF#refs/tags/}"
+              push_tag "${REGISTRY}:${GIT_TAG}"
+              ;;
+          esac

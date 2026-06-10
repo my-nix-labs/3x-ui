@@ -1,7 +1,7 @@
 { pkgs, src }:
 
 let
-  version = pkgs.lib.removeSuffix "\n" (builtins.readFile (src + "/config/version"));
+  version = pkgs.lib.removeSuffix "\n" (builtins.readFile (src + "/internal/config/version"));
 
   frontend = pkgs.callPackage ./frontend.nix { inherit src version; };
 
