@@ -29,7 +29,8 @@ jobs:
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@v14
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          use-flakehub: false
+          use-gha-cache: true
 
       - name: Build Docker image
         run: nix build .#dockerImage --print-build-logs --out-link result
