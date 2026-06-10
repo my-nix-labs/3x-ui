@@ -1,29 +1,39 @@
 { pkgs, src, x-ui, binBundle, version }:
 
 let
+  # Docker 精简镜像：仅 x-ui + xray + geo；ACME / x-ui.sh / fail2ban 见下方注释块。
   runtimeFiles = pkgs.runCommand "3x-ui-runtime-files" { } ''
-    mkdir -p $out/app/web $out/usr/bin
-    cp ${src}/DockerEntrypoint.sh $out/app/
-    cp ${src}/x-ui.sh $out/usr/bin/x-ui
+    mkdir -p $out/app/web
     cp -r ${src}/web/translation $out/app/web/translation
-    chmod +x $out/app/DockerEntrypoint.sh $out/usr/bin/x-ui
+    # cp ${src}/DockerEntrypoint.sh $out/app/
+    # chmod +x $out/app/DockerEntrypoint.sh
+    # mkdir -p $out/usr/bin
+    # cp ${src}/x-ui.sh $out/usr/bin/x-ui   # VPS 交互菜单；Docker 内用 /app/x-ui CLI 即可
+    # chmod +x $out/usr/bin/x-ui
   '';
 in
+
+# runtimeFiles（可选）：恢复 DockerEntrypoint.sh / x-ui.sh 时取消注释上面 runCommand 与下方 extraCommands  symlink
+  # contents（可选 acme / fail2ban / x-ui.sh）：
+  #   pkgs.bash pkgs.coreutils pkgs.curl pkgs.openssl  — 容器内 acme.sh 或 /usr/bin/x-ui 菜单
+  #   pkgs.gnugrep pkgs.gawk pkgs.fail2ban pkgs.iptables — fail2ban IP Limit
+  #   pkgs.tzdata + Env TZ=Asia/Tehran
 
 pkgs.dockerTools.buildLayeredImage {
   name = "3x-ui-nix-local";
   tag = "nix-${version}";
 
   contents = [
-    pkgs.bash # /bin/sh、容器内 acme.sh
-    pkgs.coreutils # acme.sh
-    # pkgs.gnugrep  # fail2ban entrypoint
-    # pkgs.gawk     # fail2ban entrypoint
-    pkgs.curl # 容器内 acme.sh 安装/续期（issue-cert.sh）
-    pkgs.openssl # acme.sh
-    pkgs.cacert # Go 出站 HTTPS、acme
-    # pkgs.tzdata   # 需要 TZ 时取消注释
-    # pkgs.fail2ban  # IP Limit 才需要；自用可关，见 XUI_ENABLE_FAIL2BAN
+    pkgs.busybox
+    pkgs.cacert
+    # pkgs.bash
+    # pkgs.coreutils
+    # pkgs.gnugrep
+    # pkgs.gawk
+    # pkgs.curl
+    # pkgs.openssl
+    # pkgs.tzdata
+    # pkgs.fail2ban
     # pkgs.iptables
     runtimeFiles
     x-ui
@@ -37,7 +47,7 @@ pkgs.dockerTools.buildLayeredImage {
       "XUI_ENABLE_FAIL2BAN=false"
       "XUI_DB_TYPE="
       "XUI_DB_DSN="
-      # "TZ=Asia/Tehran"  # 与 pkgs.tzdata 配套
+      # "TZ=Asia/Tehran"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
     ];
     ExposedPorts = {
@@ -47,12 +57,13 @@ pkgs.dockerTools.buildLayeredImage {
       "/etc/x-ui" = { };
     };
     WorkingDir = "/app";
-    Entrypoint = [ "/app/DockerEntrypoint.sh" ];
-    Cmd = [ "./x-ui" ];
+    Entrypoint = [ "/app/x-ui" ];
+    # Entrypoint = [ "/app/DockerEntrypoint.sh" ];
+    # Cmd = [ "./x-ui" ];
   };
 
   extraCommands = ''
-    # fail2ban：启用 IP Limit 时取消注释 fail2ban/iptables 与下方配置
+    # fail2ban：启用 IP Limit 时取消注释 fail2ban/iptables、DockerEntrypoint.sh 与下方配置
     # rm -f etc/fail2ban/jail.d/alpine-ssh.conf 2>/dev/null || true
     #
     # if [ -f etc/fail2ban/jail.conf ]; then
@@ -70,8 +81,8 @@ pkgs.dockerTools.buildLayeredImage {
     for p in ${binBundle}/bin/*; do
       ln -sf "$p" "app/bin/$(basename "$p")"
     done
-    ln -sf ${runtimeFiles}/app/DockerEntrypoint.sh app/DockerEntrypoint.sh
+    # ln -sf ${runtimeFiles}/app/DockerEntrypoint.sh app/DockerEntrypoint.sh
     ln -sf ${runtimeFiles}/app/web/translation app/web/translation
-    ln -sf ${runtimeFiles}/usr/bin/x-ui usr/bin/x-ui
+    # ln -sf ${runtimeFiles}/usr/bin/x-ui usr/bin/x-ui
   '';
 }
