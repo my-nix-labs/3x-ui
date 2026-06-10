@@ -43,7 +43,7 @@ let
 
   geosite = pkgs.fetchurl {
     url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat";
-    hash = "sha256-fGmOU9OiCPfbwQ9YyUtjhclKwrgN3h2HitalMc77Rpk=";
+    hash = "sha256-hyixZE98fIkzIvnDQ5YVEdsgSSqTsAm3UILVNvzItSw=";
   };
 
   # IR/RU geo omitted — only needed for ext:geoip_IR.dat / ext:geosite_RU.dat routing rules.
