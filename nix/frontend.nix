@@ -32,6 +32,6 @@ pkgs.stdenv.mkDerivation {
 
   installPhase = ''
     mkdir -p "$out/dist"
-    cp -r ../web/dist/. "$out/dist/"
+    cp -r ../internal/web/dist/. "$out/dist/"
   '';
 }

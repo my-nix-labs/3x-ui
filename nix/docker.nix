@@ -3,8 +3,8 @@
 let
   # Docker 精简镜像：仅 x-ui + xray + geo；ACME / x-ui.sh / fail2ban 见下方注释块。
   runtimeFiles = pkgs.runCommand "3x-ui-runtime-files" { } ''
-    mkdir -p $out/app/web
-    cp -r ${src}/web/translation $out/app/web/translation
+    mkdir -p $out/app/internal/web
+    cp -r ${src}/internal/web/translation $out/app/internal/web/translation
     # cp ${src}/DockerEntrypoint.sh $out/app/
     # chmod +x $out/app/DockerEntrypoint.sh
     # mkdir -p $out/usr/bin
@@ -76,13 +76,13 @@ pkgs.dockerTools.buildLayeredImage {
     #   sed -i "s/#allowipv6 = auto/allowipv6 = auto/g" etc/fail2ban/fail2ban.conf
     # fi
 
-    mkdir -p app/bin app/web
+    mkdir -p app/bin app/internal/web
     ln -sf ${x-ui}/bin/x-ui app/x-ui
     for p in ${binBundle}/bin/*; do
       ln -sf "$p" "app/bin/$(basename "$p")"
     done
     # ln -sf ${runtimeFiles}/app/DockerEntrypoint.sh app/DockerEntrypoint.sh
-    ln -sf ${runtimeFiles}/app/web/translation app/web/translation
+    ln -sf ${runtimeFiles}/app/internal/web/translation app/internal/web/translation
     # ln -sf ${runtimeFiles}/usr/bin/x-ui usr/bin/x-ui
   '';
 }

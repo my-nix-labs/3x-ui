@@ -17,9 +17,9 @@ pkgs.buildGoModule {
   '';
 
   preBuild = ''
-    rm -rf web/dist
-    mkdir -p web/dist
-    cp -r ${frontend}/dist/. web/dist/
+    rm -rf internal/web/dist
+    mkdir -p internal/web/dist
+    cp -r ${frontend}/dist/. internal/web/dist/
   '';
 
   ldflags = [ "-s" "-w" ];
