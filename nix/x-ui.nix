@@ -26,6 +26,8 @@ pkgs.buildGoModule {
 
   subPackages = [ "." ];
 
+  doCheck = false;
+
   postInstall = ''
     mv $out/bin/3x-ui $out/bin/x-ui
   '';

@@ -5,12 +5,12 @@ let
     x86_64-linux = {
       xray = "64";
       fname = "amd64";
-      mtg = "amd64";
+      # mtg = "amd64";
     };
     aarch64-linux = {
       xray = "arm64-v8a";
       fname = "arm64";
-      mtg = "arm64";
+      # mtg = "arm64";
     };
   };
 
@@ -26,14 +26,15 @@ let
         "sha256-XA85eyYFqFPlswiuZIWtLsOVyhHteuD9AjxIDH/bJ50=";
   };
 
-  mtgSrc = builtins.fetchTarball {
-    url = "https://github.com/9seconds/mtg/releases/download/v2.2.8/mtg-2.2.8-linux-${a.mtg}.tar.gz";
-    sha256 =
-      if a.mtg == "amd64" then
-        "sha256-1o81pzsZrCY0UdQ1nkg3rbSw6HhZ3UTfuYTFz23BBAk="
-      else
-        "sha256-sF6he+PiCQEphOTHZkj2X+Raa1+VNxGWd85XPROOoxg=";
-  };
+  # MTProto (mtg) omitted — VLESS-only; re-enable if you add MTProto inbounds.
+  # mtgSrc = builtins.fetchTarball {
+  #   url = "https://github.com/9seconds/mtg/releases/download/v2.2.8/mtg-2.2.8-linux-${a.mtg}.tar.gz";
+  #   sha256 =
+  #     if a.mtg == "amd64" then
+  #       "sha256-1o81pzsZrCY0UdQ1nkg3rbSw6HhZ3UTfuYTFz23BBAk="
+  #     else
+  #       "sha256-sF6he+PiCQEphOTHZkj2X+Raa1+VNxGWd85XPROOoxg=";
+  # };
 
   geoip = pkgs.fetchurl {
     url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat";
@@ -67,14 +68,15 @@ let
 
 in
 
+# runCommand (mtg): paste after xray chmod, together with mtgSrc + archMap mtg above
+  #   cp ${mtgSrc}/mtg $out/bin/mtg-linux-${a.fname}
+  #   chmod +x $out/bin/mtg-linux-${a.fname}
+
 pkgs.runCommand "3x-ui-bin" { } ''
   mkdir -p $out/bin
 
   cp ${xrayZip}/xray $out/bin/xray-linux-${a.fname}
   chmod +x $out/bin/xray-linux-${a.fname}
-
-  cp ${mtgSrc}/mtg $out/bin/mtg-linux-${a.fname}
-  chmod +x $out/bin/mtg-linux-${a.fname}
 
   cp ${geoip} $out/bin/geoip.dat
   cp ${geosite} $out/bin/geosite.dat
