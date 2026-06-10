@@ -46,31 +46,38 @@ let
     hash = "sha256-fGmOU9OiCPfbwQ9YyUtjhclKwrgN3h2HitalMc77Rpk=";
   };
 
-  geoipIR = pkgs.fetchurl {
-    url = "https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat";
-    hash = "sha256-G8N82GJZnQI1AK2DZYrOXmQvP78qdSManY2zRMTihlk=";
-  };
-
-  geositeIR = pkgs.fetchurl {
-    url = "https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geosite.dat";
-    hash = "sha256-5Qv37VdX9B6ZsK13F/LXJ/oARWac2pJu/gPJbBuTQtU=";
-  };
-
-  geoipRU = pkgs.fetchurl {
-    url = "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat";
-    hash = "sha256-whOoQ/3ZXS6H5XPO/INLA7NKnFMKu50XEOoB3ZQ4K74=";
-  };
-
-  geositeRU = pkgs.fetchurl {
-    url = "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat";
-    hash = "sha256-pn/hcCiEW2C+t0YWQZ/MgAuG31fTmr27KjRbofcQtwY=";
-  };
+  # IR/RU geo omitted — only needed for ext:geoip_IR.dat / ext:geosite_RU.dat routing rules.
+  # geoipIR = pkgs.fetchurl {
+  #   url = "https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geoip.dat";
+  #   hash = "sha256-G8N82GJZnQI1AK2DZYrOXmQvP78qdSManY2zRMTihlk=";
+  # };
+  #
+  # geositeIR = pkgs.fetchurl {
+  #   url = "https://github.com/chocolate4u/Iran-v2ray-rules/releases/latest/download/geosite.dat";
+  #   hash = "sha256-5Qv37VdX9B6ZsK13F/LXJ/oARWac2pJu/gPJbBuTQtU=";
+  # };
+  #
+  # geoipRU = pkgs.fetchurl {
+  #   url = "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geoip.dat";
+  #   hash = "sha256-whOoQ/3ZXS6H5XPO/INLA7NKnFMKu50XEOoB3ZQ4K74=";
+  # };
+  #
+  # geositeRU = pkgs.fetchurl {
+  #   url = "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download/geosite.dat";
+  #   hash = "sha256-pn/hcCiEW2C+t0YWQZ/MgAuG31fTmr27KjRbofcQtwY=";
+  # };
 
 in
 
 # runCommand (mtg): paste after xray chmod, together with mtgSrc + archMap mtg above
   #   cp ${mtgSrc}/mtg $out/bin/mtg-linux-${a.fname}
   #   chmod +x $out/bin/mtg-linux-${a.fname}
+
+  # runCommand (IR/RU geo): paste after geosite, together with geoipIR/geositeIR/geoipRU/geositeRU above
+  #   cp ${geoipIR} $out/bin/geoip_IR.dat
+  #   cp ${geositeIR} $out/bin/geosite_IR.dat
+  #   cp ${geoipRU} $out/bin/geoip_RU.dat
+  #   cp ${geositeRU} $out/bin/geosite_RU.dat
 
 pkgs.runCommand "3x-ui-bin" { } ''
   mkdir -p $out/bin
@@ -80,8 +87,4 @@ pkgs.runCommand "3x-ui-bin" { } ''
 
   cp ${geoip} $out/bin/geoip.dat
   cp ${geosite} $out/bin/geosite.dat
-  cp ${geoipIR} $out/bin/geoip_IR.dat
-  cp ${geositeIR} $out/bin/geosite_IR.dat
-  cp ${geoipRU} $out/bin/geoip_RU.dat
-  cp ${geositeRU} $out/bin/geosite_RU.dat
 ''

@@ -15,16 +15,16 @@ pkgs.dockerTools.buildLayeredImage {
   tag = "nix-${version}";
 
   contents = [
-    pkgs.bash
-    pkgs.coreutils
-    pkgs.gnugrep
-    pkgs.gawk
-    pkgs.curl
-    pkgs.openssl
-    pkgs.cacert
-    pkgs.tzdata
-    pkgs.fail2ban
-    pkgs.iptables
+    pkgs.bash # /bin/sh、容器内 acme.sh
+    pkgs.coreutils # acme.sh
+    # pkgs.gnugrep  # fail2ban entrypoint
+    # pkgs.gawk     # fail2ban entrypoint
+    pkgs.curl # 容器内 acme.sh 安装/续期（issue-cert.sh）
+    pkgs.openssl # acme.sh
+    pkgs.cacert # Go 出站 HTTPS、acme
+    # pkgs.tzdata   # 需要 TZ 时取消注释
+    # pkgs.fail2ban  # IP Limit 才需要；自用可关，见 XUI_ENABLE_FAIL2BAN
+    # pkgs.iptables
     runtimeFiles
     x-ui
     binBundle
@@ -34,10 +34,10 @@ pkgs.dockerTools.buildLayeredImage {
     Env = [
       "XUI_IN_DOCKER=true"
       "XUI_MAIN_FOLDER=/app"
-      "XUI_ENABLE_FAIL2BAN=true"
+      "XUI_ENABLE_FAIL2BAN=false"
       "XUI_DB_TYPE="
       "XUI_DB_DSN="
-      "TZ=Asia/Tehran"
+      # "TZ=Asia/Tehran"  # 与 pkgs.tzdata 配套
       "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"
     ];
     ExposedPorts = {
@@ -52,17 +52,18 @@ pkgs.dockerTools.buildLayeredImage {
   };
 
   extraCommands = ''
-    rm -f etc/fail2ban/jail.d/alpine-ssh.conf 2>/dev/null || true
-
-    if [ -f etc/fail2ban/jail.conf ]; then
-      cp etc/fail2ban/jail.conf etc/fail2ban/jail.local
-      sed -i "s/^\[ssh\]\$/&\nenabled = false/" etc/fail2ban/jail.local
-      sed -i "s/^\[sshd\]\$/&\nenabled = false/" etc/fail2ban/jail.local
-    fi
-
-    if [ -f etc/fail2ban/fail2ban.conf ]; then
-      sed -i "s/#allowipv6 = auto/allowipv6 = auto/g" etc/fail2ban/fail2ban.conf
-    fi
+    # fail2ban：启用 IP Limit 时取消注释 fail2ban/iptables 与下方配置
+    # rm -f etc/fail2ban/jail.d/alpine-ssh.conf 2>/dev/null || true
+    #
+    # if [ -f etc/fail2ban/jail.conf ]; then
+    #   cp etc/fail2ban/jail.conf etc/fail2ban/jail.local
+    #   sed -i "s/^\[ssh\]\$/&\nenabled = false/" etc/fail2ban/jail.local
+    #   sed -i "s/^\[sshd\]\$/&\nenabled = false/" etc/fail2ban/jail.local
+    # fi
+    #
+    # if [ -f etc/fail2ban/fail2ban.conf ]; then
+    #   sed -i "s/#allowipv6 = auto/allowipv6 = auto/g" etc/fail2ban/fail2ban.conf
+    # fi
 
     mkdir -p app/bin app/web
     ln -sf ${x-ui}/bin/x-ui app/x-ui
